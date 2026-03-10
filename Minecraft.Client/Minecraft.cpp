@@ -1961,6 +1961,11 @@ void Minecraft::run_middle()
 				lastTime += 1000000000;
 				frames = 0;
 			}
+            }
+			if (font != NULL && !fpsString.empty())
+			{
+				font->drawShadow(fpsString, 2, 2, 0xFFFFFF);
+			}
 #endif
 			/*
 			} catch (LevelConflictException e) {
