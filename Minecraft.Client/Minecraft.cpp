@@ -1,5 +1,6 @@
 #include "Platform/stdafx.h"
 #include "Minecraft.h"
+#include <GLFW/glfw3.h>
 #include "GameState/GameMode.h"
 #include "Utils/Timer.h"
 #include "Rendering/EntityRenderers/ProgressRenderer.h"
@@ -1961,10 +1962,51 @@ void Minecraft::run_middle()
 				lastTime += 1000000000;
 				frames = 0;
 			}
-            }
 			if (font != NULL && !fpsString.empty())
 			{
-				font->drawShadow(fpsString, 2, 2, 0xFFFFFF);
+				// Press O to cycle: top-left -> top-center -> top-right -> hidden
+				static int fpsPosition = 0;
+				static bool f4WasDown = false;
+				bool f4Down = glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_O) == GLFW_PRESS;
+				if (f4Down && !f4WasDown)
+					fpsPosition = (fpsPosition + 1) % 4;
+				f4WasDown = f4Down;
+
+				if (fpsPosition < 3)
+				{
+					// Set up GUI ortho matrix so font draws at the correct scale
+					ScreenSizeCalculator ssc(options, width, height);
+					int sw = ssc.getWidth();
+					int sh = ssc.getHeight();
+					glMatrixMode(GL_PROJECTION);
+					glPushMatrix();
+					glLoadIdentity();
+					glOrtho(0, (float)ssc.rawWidth, (float)ssc.rawHeight, 0, 1000, 3000);
+					glMatrixMode(GL_MODELVIEW);
+					glPushMatrix();
+					glLoadIdentity();
+					glTranslatef(0, 0, -2000);
+
+					int fx = 2;
+					int fy = 2;
+					if (fpsPosition == 1)
+					{
+						// top-center
+						fx = (sw / 2) - (font->width(fpsString) / 2);
+						fy = 2;
+					}
+					else if (fpsPosition == 2)
+					{
+						// top-right
+						fx = sw - font->width(fpsString) - 2;
+					}
+					font->drawShadow(fpsString, fx, fy, 0xFFFFFF);
+
+					glMatrixMode(GL_PROJECTION);
+					glPopMatrix();
+					glMatrixMode(GL_MODELVIEW);
+					glPopMatrix();
+				}
 			}
 #endif
 			/*
@@ -4898,4 +4940,3 @@ int Minecraft::MustSignInReturnedPSN(void *pParam, int iPad, C4JStorage::EMessag
     return 0;
 }
 #endif
-
