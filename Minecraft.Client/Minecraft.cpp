@@ -1896,7 +1896,6 @@ void Minecraft::run_middle()
 			Sleep(10);
 			}
 			*/
-			renderFpsMeter(tickDuraction);
 			if (options->renderDebug)
 			{
 				
@@ -3226,13 +3225,12 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		ui.SetTooltips( iPad, iA,iB,iX,iY,iLT,iRT,iLB,iRB);
 
 		int wheel = 0;
-		if (InputManager.GetValue(iPad, MINECRAFT_ACTION_LEFT_SCROLL, true) > 0 && gameMode->isInputAllowed(MINECRAFT_ACTION_LEFT_SCROLL) )
-		{
-			wheel = 1;
-		}
-		else if (InputManager.GetValue(iPad, MINECRAFT_ACTION_RIGHT_SCROLL,true) > 0 && gameMode->isInputAllowed(MINECRAFT_ACTION_RIGHT_SCROLL) )
-		{
-			wheel = -1;
+		unsigned int leftTicks = InputManager.GetValue(iPad, MINECRAFT_ACTION_LEFT_SCROLL, true);
+		unsigned int rightTicks = InputManager.GetValue(iPad, MINECRAFT_ACTION_RIGHT_SCROLL, true);
+		if (leftTicks > 0 && gameMode->isInputAllowed(MINECRAFT_ACTION_LEFT_SCROLL)) {
+			wheel = (int)leftTicks; // positive = left
+		} else if (rightTicks > 0 && gameMode->isInputAllowed(MINECRAFT_ACTION_RIGHT_SCROLL)) {
+			wheel = -(int)rightTicks; // negative = right
 		}
 		if (wheel != 0)
 		{
@@ -3255,7 +3253,6 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 				options->flySpeed += wheel * .25f;
 			}
 		}
-
 		if( gameMode->isInputAllowed(MINECRAFT_ACTION_ACTION) )
 		{
 			if((player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_ACTION)))
@@ -3450,7 +3447,8 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		}
 
 		if ( (player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_PAUSEMENU))
-#ifdef _DURANGO
+
+		#ifdef _DURANGO
 			|| (player->ullButtonsPressed&(1LL<<ACTION_MENU_GTC_PAUSE))
 #endif
 			)
@@ -3468,6 +3466,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		__uint64 ullButtonsPressed=player->ullButtonsPressed;
 		
 		bool selected = false;
+		
 #ifdef __PSVITA__
 		// 4J-PB - use the touchscreen for quickselect
 		SceTouchData* pTouchData = InputManager.GetTouchPadData(iPad,false);
@@ -3484,6 +3483,14 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 			}
 		}
 #endif
+		{
+			int hotbarSlot = InputManager.GetHotbarSlotPressed(iPad);
+			if (hotbarSlot >= 0 && hotbarSlot <= 9)
+			{
+				player->inventory->selected = hotbarSlot;
+				selected = true;
+			}
+		}
 		if( selected || wheel != 0 || (player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_DROP)) )
 		{
 			std::wstring itemName = L"";
@@ -3538,7 +3545,14 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 			int wheel = Mouse.getEventDWheel();
 			if (wheel != 0) {
 				player->inventory.swapPaint(wheel);
-
+				{
+				    int hotbarSlot = InputManager.GetHotbarSlotPressed(iPad);
+				    if (hotbarSlot >= 0 && gameMode->isInputAllowed(MINECRAFT_ACTION_LEFT_SCROLL))
+				    {
+				        player->inventory->selected = hotbarSlot;
+				        selected = true;
+				    }
+				}
 				if (options.isFlying) {
 					if (wheel > 0) wheel = 1;
 					if (wheel < 0) wheel = -1;
