@@ -27,6 +27,10 @@ static int   s_scrollTicksForGetValue      = 0;
 static int   s_scrollTicksSnap = 0;
 static bool  s_scrollSnapTaken = false;
 
+// FPS counter position: 0=top-left, 1=top-center, 2=top-right, 3=hidden
+static int   s_fpsPosition = 0;
+int C_4JInput::GetFPSPosition() { return s_fpsPosition; }
+
 // We set all the watched keys
 // I don't know if I'll need to change this if we add chat support soon.
 static const int s_watchedKeys[] = {
@@ -41,6 +45,7 @@ static const int s_watchedKeys[] = {
     SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4,
     SDL_SCANCODE_5, SDL_SCANCODE_6, SDL_SCANCODE_7, SDL_SCANCODE_8,
     SDL_SCANCODE_9,
+    SDL_SCANCODE_O,
 };
 static const int s_watchedKeyCount = (int)(sizeof(s_watchedKeys) / sizeof(s_watchedKeys[0]));
 
@@ -156,6 +161,10 @@ void C_4JInput::Tick() {
         SDL_Window *mf = SDL_GetMouseFocus();
         if (mf) { SDL_RaiseWindow(mf); SDL_SetWindowGrab(mf, SDL_TRUE); }
     }
+
+    // FPS counter position cycle — O key, handled here so no SDL calls leak into game code
+    if (KPressed(SDL_SCANCODE_O))
+        s_fpsPosition = (s_fpsPosition + 1) % 4;
 }
 
 int C_4JInput::GetHotbarSlotPressed(int iPad) {
