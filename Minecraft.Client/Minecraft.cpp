@@ -1,6 +1,5 @@
 #include "Platform/stdafx.h"
 #include "Minecraft.h"
-#include <GLFW/glfw3.h>
 #include "GameState/GameMode.h"
 #include "Utils/Timer.h"
 #include "Rendering/EntityRenderers/ProgressRenderer.h"
@@ -1963,20 +1962,11 @@ void Minecraft::run_middle()
 			}
 			if (font != NULL && !fpsString.empty())
 			{
-				// Press O to cycle: top-left -> top-center -> top-right -> hidden
-				static int fpsPosition = 0;
-				static bool f4WasDown = false;
-				bool f4Down = glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_O) == GLFW_PRESS;
-				if (f4Down && !f4WasDown)
-					fpsPosition = (fpsPosition + 1) % 4;
-				f4WasDown = f4Down;
-
+				int fpsPosition = InputManager.GetFPSPosition();
 				if (fpsPosition < 3)
 				{
-					// Set up GUI ortho matrix so font draws at the correct scale
 					ScreenSizeCalculator ssc(options, width, height);
 					int sw = ssc.getWidth();
-					int sh = ssc.getHeight();
 					glMatrixMode(GL_PROJECTION);
 					glPushMatrix();
 					glLoadIdentity();
@@ -1992,7 +1982,6 @@ void Minecraft::run_middle()
 					{
 						// top-center
 						fx = (sw / 2) - (font->width(fpsString) / 2);
-						fy = 2;
 					}
 					else if (fpsPosition == 2)
 					{
